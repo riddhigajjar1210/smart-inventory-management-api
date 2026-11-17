@@ -201,9 +201,6 @@ http://127.0.0.1:8000/api/inventory/low-stock?threshold=50
 http://127.0.0.1:8000/api/products/1/movements
 ```
 
-On Windows, you can also double-click `TEST_PRACTICAL.bat`.
-It sets up the database, runs the tests, and starts the API.
-
 ## Error Handling
 
 - `422` – Validation errors and business rule violations.
