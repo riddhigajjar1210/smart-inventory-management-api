@@ -13,83 +13,124 @@ Stock Movements. Built for the PHP/Laravel practical assessment.
 
 ## 1. Setup instructions
 
-Start MySQL in XAMPP first. Then follow these steps in order. Run all commands inside the project folder.
+Follow each step. Do not skip a step.
 
-### Step 1 - Clone the project
+### Step 1: Start MySQL
+
+Open XAMPP.
+Click Start next to MySQL.
+
+### Step 2: Open the terminal
+
+Open PowerShell.
+Go to the htdocs folder.
 
 ```powershell
 cd C:\xampp\htdocs
+```
+
+### Step 3: Clone the project
+
+Run this command.
+
+```powershell
 git clone https://github.com/riddhigajjar1210/smart-inventory-management-api.git
+```
+
+Open the project folder.
+
+```powershell
 cd smart-inventory-management-api
 ```
 
-### Step 2 - Install packages
+### Step 4: Install packages
+
+Run this command.
 
 ```powershell
 composer install
 ```
 
-### Step 3 - Create two databases
+### Step 5: Create two databases
 
-Create these databases in MySQL or phpMyAdmin:
+Open phpMyAdmin.
+Create two databases.
+Name one database logieagle_db.
+Name one database logieagle_db_test.
+Use collation utf8mb4_unicode_ci.
+
+You can also run this SQL.
 
 ```sql
 CREATE DATABASE IF NOT EXISTS logieagle_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS logieagle_db_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-### Step 4 - Create the .env file
+### Step 6: Create the .env file
+
+Run these two commands.
 
 ```powershell
 Copy-Item .env.example .env -Force
 php artisan key:generate
 ```
 
-The .env file is not uploaded to GitHub. Keep DB_DATABASE=logieagle_db and CACHE_STORE=redis.
+Do not upload the .env file to GitHub.
 
-### Step 5 - Start Redis
+### Step 7: Start Redis
 
-Start Redis. Check it with:
+Start Redis.
+Run this command.
 
 ```powershell
 redis-cli ping
 ```
 
-You should see PONG.
+You will see PONG.
 
-### Step 6 - Create tables and sample data
+### Step 8: Create tables and sample data
+
+Run this command.
 
 ```powershell
 php artisan migrate:fresh --seed --force
 ```
 
-### Step 7 - Warm the cache
+### Step 9: Warm the cache
+
+Run this command.
 
 ```powershell
 php artisan cache:warm
 ```
 
-### Step 8 - Start the API
+### Step 10: Start the API
+
+Run this command.
 
 ```powershell
 php artisan serve
 ```
 
-Open this URL: http://127.0.0.1:8000/api/categories/tree
+Open this link.
 
-### Step 9 - Run the tests
+http://127.0.0.1:8000/api/categories/tree
 
-In another terminal, run:
+### Step 11: Run the tests
+
+Open a new terminal.
+Run this command.
 
 ```powershell
 php artisan test
 ```
 
-Expected result: Tests: 16 passed.
+You will see 16 passed.
 
-### Step 10 - Quick way on Windows
+### Step 12: Easy way
 
-You can double-click TEST_PRACTICAL.bat instead of doing Steps 5 to 9.
+You can double-click TEST_PRACTICAL.bat.
+It does steps 7 to 11 for you.
 
 ---
 
