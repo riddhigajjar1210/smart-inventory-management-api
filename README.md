@@ -13,39 +13,9 @@ Stock Movements. Built for the PHP/Laravel practical assessment.
 
 ## 1. Setup instructions
 
-This section is written for someone starting from a clean machine. Run every command from the
-**project root** (the folder that contains `artisan`, `composer.json` and this README), unless a
-step says otherwise. The examples use Windows PowerShell with XAMPP because that is the local
-development environment used for this project; the differences for macOS/Linux are shown where
-they matter.
+Start MySQL in XAMPP first. Then follow these steps in order. Run all commands inside the project folder.
 
-### 1.1 What must be installed first
-
-| Tool | Required version | Why it is needed |
-|------|------------------|------------------|
-| Git | any recent version | to clone the repository |
-| PHP | 8.1 or newer (developed on 8.2) | runs Laravel |
-| Composer | 2.x | installs Laravel and `predis/predis` |
-| MySQL 8 or MariaDB 10.x | any current release | stores the application data (XAMPP's MariaDB works) |
-| Redis server | 5 or newer | cache store for the tree, listing, summary and low-stock endpoints |
-
-You do **not** need the `phpredis` PHP extension. The project uses the `predis/predis` PHP client,
-so a plain Redis server is enough. If you later install `phpredis`, change `REDIS_CLIENT` to
-`phpredis` in `.env`.
-
-Optional version checks:
-
-```powershell
-php -v
-composer --version
-mysql --version
-redis-cli --version
-```
-
-### 1.2 Clone the repository
-
-Open PowerShell and choose a folder where you keep your websites. With XAMPP the usual folder is
-`C:\xampp\htdocs`:
+### Step 1 - Clone the project
 
 ```powershell
 cd C:\xampp\htdocs
@@ -53,298 +23,73 @@ git clone https://github.com/riddhigajjar1210/smart-inventory-management-api.git
 cd smart-inventory-management-api
 ```
 
-On macOS/Linux the same commands work from any folder:
-
-```bash
-git clone https://github.com/riddhigajjar1210/smart-inventory-management-api.git
-cd smart-inventory-management-api
-```
-
-If you already cloned the repository before, you do not need to clone it again. Just open the
-folder and get the latest code:
-
-```powershell
-cd C:\xampp\htdocs\smart-inventory-management-api
-git pull origin main
-```
-
-You should now be inside a folder containing `artisan`, `app/`, `database/`, `routes/`,
-`README.md`, `.env.example` and `composer.json`. That is the project root. Every remaining
-`php artisan` command must be run here.
-
-### 1.3 Install PHP dependencies
+### Step 2 - Install packages
 
 ```powershell
 composer install
 ```
 
-This reads `composer.lock`, downloads Laravel 11 and the single extra package (`predis/predis`),
-and creates the `vendor/` directory. `vendor/` is intentionally not committed to GitHub.
+### Step 3 - Create two databases
 
-If Composer reports a missing PHP extension, enable the extension in your `php.ini` (XAMPP:
-`C:\xampp\php\php.ini`) and restart Apache/PHP. The important ones for Laravel are `pdo_mysql`,
-`mbstring`, `openssl`, `tokenizer`, `ctype`, `json`, `fileinfo` and `curl`.
+Create these databases in MySQL or phpMyAdmin:
 
-### 1.4 Create the two MySQL databases
-
-The application uses `logieagle_db`. The test suite uses a separate database called
-`logieagle_db_test` so tests never destroy your working data. Both must exist before migrations.
-
-**Option A — phpMyAdmin (easiest with XAMPP)**
-
-1. Open `http://localhost/phpmyadmin` in your browser.
-2. Log in with user `root` and an empty password (XAMPP default).
-3. Click **New**, create `logieagle_db`, choose collation `utf8mb4_unicode_ci`, click **Create**.
-4. Repeat and create `logieagle_db_test` with the same collation.
-
-**Option B — MySQL command line (Windows/XAMPP)**
-
-```powershell
-& "C:\xampp\mysql\bin\mysql.exe" -u root -e "CREATE DATABASE IF NOT EXISTS logieagle_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS logieagle_db_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+```sql
+CREATE DATABASE IF NOT EXISTS logieagle_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS logieagle_db_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-**Option C — MySQL command line (macOS/Linux)**
-
-```bash
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS logieagle_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE DATABASE IF NOT EXISTS logieagle_db_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-```
-
-If your `root` user has a password, add `-p` on Windows too, or supply `-u your_user -p` with a
-user that is allowed to create databases. Verify that both databases exist:
-
-```powershell
-& "C:\xampp\mysql\bin\mysql.exe" -u root -e "SHOW DATABASES LIKE 'logieagle%';"
-```
-
-### 1.5 Create and configure the `.env` file
-
-The repository contains `.env.example` but deliberately **never** contains `.env`, because `.env`
-holds machine-specific settings and secrets. Copy the example to a real environment file:
+### Step 4 - Create the .env file
 
 ```powershell
 Copy-Item .env.example .env -Force
 php artisan key:generate
 ```
 
-macOS/Linux equivalent:
+The .env file is not uploaded to GitHub. Keep DB_DATABASE=logieagle_db and CACHE_STORE=redis.
 
-```bash
-cp .env.example .env
-php artisan key:generate
-```
+### Step 5 - Start Redis
 
-`php artisan key:generate` writes a random `APP_KEY` into `.env`. Without it Laravel cannot
-encrypt sessions or cookies and the app will throw a "No application encryption key has been
-specified" error.
-
-Open `.env` in a text editor and confirm these values (they are already the defaults in
-`.env.example`):
-
-```dotenv
-APP_NAME="Smart Inventory API"
-APP_ENV=local
-APP_KEY=base64:...generated_above...
-APP_DEBUG=true
-APP_URL=http://127.0.0.1:8000
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=logieagle_db
-DB_USERNAME=root
-DB_PASSWORD=
-
-CACHE_STORE=redis
-
-REDIS_CLIENT=predis
-REDIS_HOST=127.0.0.1
-REDIS_PASSWORD=null
-REDIS_PORT=6379
-REDIS_DB=0
-REDIS_CACHE_DB=1
-```
-
-Change `DB_USERNAME` and `DB_PASSWORD` if your MySQL user is different. With a default XAMPP
-install the username is `root` and the password is empty, so leave `DB_PASSWORD=` exactly as
-shown. Keep `CACHE_STORE=redis` — the caching tests and the `cache:warm` command expect Redis.
-
-> `.env` is listed in `.gitignore`. Never commit it and never paste its contents into a ticket,
-> screenshot or chat. Share only `.env.example`, which contains placeholders.
-
-### 1.6 Start Redis
-
-Redis must be running before you warm or use the cache. Any Redis 5+ server is fine.
-
-**Windows:** install a Redis service such as Memurai/Redis for Windows, or use a portable
-`redis-server.exe`. Start it and leave the window open:
-
-```powershell
-C:\Users\<your-user>\AppData\Local\Temp\redis-portable\redis-server.exe --port 6379 --appendonly no
-```
-
-**macOS (Homebrew):**
-
-```bash
-brew install redis
-brew services start redis
-```
-
-**Linux (Debian/Ubuntu):**
-
-```bash
-sudo apt update
-sudo apt install redis-server
-sudo systemctl start redis-server
-```
-
-Verify that Redis answers:
+Start Redis. Check it with:
 
 ```powershell
 redis-cli ping
 ```
 
-You should see:
+You should see PONG.
 
-```text
-PONG
-```
-
-If you see `Could not connect to Redis`, start the server and check that port `6379` is not
-blocked. Because `REDIS_CLIENT=predis`, no PHP extension installation is required.
-
-### 1.7 Migrate the database and load the seed data
-
-Make sure MySQL is running, then run:
+### Step 6 - Create tables and sample data
 
 ```powershell
 php artisan migrate:fresh --seed --force
 ```
 
-`migrate:fresh` drops every table and runs all migrations again, so use it only on a local or test
-database. It creates these five tables, each with its indexes and comments:
-
-- `categories`
-- `products`
-- `warehouses`
-- `stock`
-- `stock_movements`
-
-The seeders then load realistic data:
-
-- 12 categories, including nested children, one inactive parent with an active child, and at
-  least one category with no products
-- 50 products
-- 3 warehouses
-- roughly 150 stock rows, with products spread across multiple warehouses and at least one
-  zero-stock product
-- 200 stock movement records
-
-You can confirm the counts in MySQL:
-
-```powershell
-& "C:\xampp\mysql\bin\mysql.exe" -u root logieagle_db -e "SELECT (SELECT COUNT(*) FROM categories) AS categories, (SELECT COUNT(*) FROM products) AS products, (SELECT COUNT(*) FROM warehouses) AS warehouses, (SELECT COUNT(*) FROM stock) AS stock_rows, (SELECT COUNT(*) FROM stock_movements) AS movements;"
-```
-
-### 1.8 Warm the caches (recommended)
-
-With Redis running, prime the two hot keys:
+### Step 7 - Warm the cache
 
 ```powershell
 php artisan cache:warm
 ```
 
-This fills `categories:tree:v1` and `inventory:summary:v1` so the first real request is fast and
-so you can immediately confirm that Redis integration works. All keys, TTLs and invalidation
-rules are documented in section 5.
-
-### 1.9 Start the API server
-
-Keep this command running in its own terminal:
+### Step 8 - Start the API
 
 ```powershell
-php artisan serve --host=127.0.0.1 --port=8000
+php artisan serve
 ```
 
-You should see:
+Open this URL: http://127.0.0.1:8000/api/categories/tree
 
-```text
-Starting Laravel development server: http://127.0.0.1:8000
-```
+### Step 9 - Run the tests
 
-The API base URL is:
-
-```text
-http://127.0.0.1:8000/api
-```
-
-Open these URLs in a browser to confirm the endpoints respond with JSON:
-
-```text
-http://127.0.0.1:8000/api/categories/tree
-http://127.0.0.1:8000/api/products
-http://127.0.0.1:8000/api/inventory/summary
-http://127.0.0.1:8000/api/inventory/low-stock?threshold=50
-http://127.0.0.1:8000/api/products/1/movements
-```
-
-### 1.10 Run the test suite
-
-Open a **second** terminal (leave `php artisan serve` running) and run:
+In another terminal, run:
 
 ```powershell
 php artisan test
 ```
 
-Expected result:
+Expected result: Tests: 16 passed.
 
-```text
-Tests:    16 passed (78 assertions)
-```
+### Step 10 - Quick way on Windows
 
-The suite uses `logieagle_db_test` and the array cache driver configured in `phpunit.xml`, so it
-does not touch `logieagle_db` or Redis. If you see a database error, create `logieagle_db_test`
-as described in section 1.4. To run one file only:
-
-```powershell
-php artisan test --filter=StockAdjustmentTest
-```
-
-### 1.11 Quick write test (POST /api/stock/adjust)
-
-From PowerShell, send a small `stock_in` adjustment:
-
-```powershell
-$body = @{
-    product_id    = 1
-    warehouse_id  = 2
-    movement_type = 'stock_in'
-    quantity      = 10
-} | ConvertTo-Json
-
-Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/stock/adjust' -Method Post -ContentType 'application/json' -Body $body | ConvertTo-Json -Depth 6
-```
-
-A successful response contains the updated stock row with `available_quantity`. The same request
-also inserts an immutable row into `stock_movements` and bumps the relevant cache versions.
-
-### 1.12 One-click helper on Windows
-
-For a quick local demo, double-click `TEST_PRACTICAL.bat` in the project root. It starts Redis if
-needed, runs `migrate:fresh --seed --force`, warms the caches, runs the tests, starts
-`php artisan serve`, and opens the category tree in your browser. `HOW_TO_TEST.md` contains the
-same steps in plain language.
-
-### 1.13 Common setup problems
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| `SQLSTATE[HY000] [2002] Connection refused` | MySQL is not running or wrong `DB_HOST`/`DB_PORT` | Start XAMPP MySQL; confirm `DB_HOST=127.0.0.1`, `DB_PORT=3306` |
-| `Unknown database 'logieagle_db'` | Database was not created | Repeat section 1.4 |
-| `No application encryption key has been specified` | `.env` missing or `APP_KEY` empty | Copy `.env.example` to `.env`, then run `php artisan key:generate` |
-| `Connection refused` from Redis / cache commands | Redis server is not running | Start Redis; confirm `redis-cli ping` returns `PONG` |
-| `Class "Predis\Client" not found` | Dependencies not installed | Run `composer install` from the project root |
-| Browser shows 404 on `/api/...` | Server started from the wrong folder or prefix omitted | Start `php artisan serve` in the project root and include `/api` |
-| Tests fail with `logieagle_db_test` missing | Test database was not created | Repeat section 1.4 for the test database |
+You can double-click TEST_PRACTICAL.bat instead of doing Steps 5 to 9.
 
 ---
 
